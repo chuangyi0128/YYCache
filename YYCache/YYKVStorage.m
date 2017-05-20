@@ -56,21 +56,6 @@ static NSString *const kTrashDirectoryName = @"trash";
  create index if not exists last_access_time_idx on manifest(last_access_time);
  */
 
-/// Returns nil in App Extension.
-static UIApplication *_YYSharedApplication() {
-    static BOOL isAppExtension = NO;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        Class cls = NSClassFromString(@"UIApplication");
-        if(!cls || ![cls respondsToSelector:@selector(sharedApplication)]) isAppExtension = YES;
-        if ([[[NSBundle mainBundle] bundlePath] hasSuffix:@".appex"]) isAppExtension = YES;
-    });
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wundeclared-selector"
-    return isAppExtension ? nil : [UIApplication performSelector:@selector(sharedApplication)];
-#pragma clang diagnostic pop
-}
-
 
 @implementation YYKVStorageItem
 @end
@@ -727,10 +712,10 @@ static UIApplication *_YYSharedApplication() {
 }
 
 - (void)dealloc {
-    UIBackgroundTaskIdentifier taskID = [_YYSharedApplication() beginBackgroundTaskWithExpirationHandler:^{}];
+    UIBackgroundTaskIdentifier taskID = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{}];
     [self _dbClose];
     if (taskID != UIBackgroundTaskInvalid) {
-        [_YYSharedApplication() endBackgroundTask:taskID];
+        [[UIApplication sharedApplication] endBackgroundTask:taskID];
     }
 }
 
